@@ -590,21 +590,21 @@ void SceneEditor::SaveScene()
             std::to_string(m_SceneObjects[i]->position.y) + "\t" +
             std::to_string(m_SceneObjects[i]->position.z));
         lines.push_back("Rotation\t" +
-            std::to_string(glm::eulerAngles(m_SceneObjects[i]->rotation).x / toRadians) + "\t" +
-            std::to_string(glm::eulerAngles(m_SceneObjects[i]->rotation).y / toRadians) + "\t" +
-            std::to_string(glm::eulerAngles(m_SceneObjects[i]->rotation).z / toRadians));
+            std::to_string(m_SceneObjects[i]->rotation.x) + "\t" +
+            std::to_string(m_SceneObjects[i]->rotation.y) + "\t" +
+            std::to_string(m_SceneObjects[i]->rotation.z));
         lines.push_back("Scale\t" +
             std::to_string(m_SceneObjects[i]->scale.x) + "\t" +
             std::to_string(m_SceneObjects[i]->scale.y) + "\t" +
             std::to_string(m_SceneObjects[i]->scale.z));
         lines.push_back("PositionAABB\t" +
-            std::to_string(m_SceneObjects[i]->positionAABB.x) + "\t" +
-            std::to_string(m_SceneObjects[i]->positionAABB.y) + "\t" +
-            std::to_string(m_SceneObjects[i]->positionAABB.z));
+            std::to_string(m_SceneObjects[i]->AABB->m_PositionOrigin.x) + "\t" +
+            std::to_string(m_SceneObjects[i]->AABB->m_PositionOrigin.y) + "\t" +
+            std::to_string(m_SceneObjects[i]->AABB->m_PositionOrigin.z));
         lines.push_back("ScaleAABB\t" +
-            std::to_string(m_SceneObjects[i]->scaleAABB.x) + "\t" +
-            std::to_string(m_SceneObjects[i]->scaleAABB.y) + "\t" +
-            std::to_string(m_SceneObjects[i]->scaleAABB.z));
+            std::to_string(m_SceneObjects[i]->AABB->m_ScaleOrigin.x) + "\t" +
+            std::to_string(m_SceneObjects[i]->AABB->m_ScaleOrigin.y) + "\t" +
+            std::to_string(m_SceneObjects[i]->AABB->m_ScaleOrigin.z));
         lines.push_back("Color\t" +
             std::to_string(m_SceneObjects[i]->color.r) + "\t" +
             std::to_string(m_SceneObjects[i]->color.g) + "\t" +
@@ -671,7 +671,7 @@ void SceneEditor::LoadScene()
 
         // for (auto& token : tokens)
         //     printf("%s\n", token.c_str());
-        
+
         if (tokens.size() >= 2 && tokens[0] == "BeginObject") {
             objectId = (unsigned int)std::stoi(tokens[1]);
             sceneObject = CreateNewSceneObject();
@@ -682,7 +682,7 @@ void SceneEditor::LoadScene()
             // printf("Position %.2ff %.2ff %.2ff\n", sceneObject.position.x, sceneObject.position.y, sceneObject.position.z);
         }
         else if (tokens.size() >= 4 && tokens[0] == "Rotation") {
-            sceneObject->rotation = glm::quat(glm::vec3(std::stof(tokens[1]), std::stof(tokens[2]), std::stof(tokens[3])) * toRadians);
+            sceneObject->rotation = glm::vec3(std::stof(tokens[1]), std::stof(tokens[2]), std::stof(tokens[3]));
             // printf("Rotation %.2ff %.2ff %.2ff\n", sceneObject.rotation.x, sceneObject.rotation.y, sceneObject.rotation.z);
         }
         else if (tokens.size() >= 4 && tokens[0] == "Scale") {
@@ -707,7 +707,7 @@ void SceneEditor::LoadScene()
         }
         else if (tokens.size() >= 2 && tokens[0] == "TextureName") {
             sceneObject->textureName = tokens[1];
-            // printf("TextureName %s\n", sceneObject.textureName.c_str());
+            // printf("UseTexture %s\n", sceneObject.textureName.c_str());
         }
         else if (tokens.size() >= 2 && tokens[0] == "TilingFactor") {
             sceneObject->tilingFactor = std::stof(tokens[1]);
@@ -720,7 +720,7 @@ void SceneEditor::LoadScene()
         }
         else if (tokens.size() >= 2 && tokens[0] == "ObjectType") {
             sceneObject->objectType = tokens[1];
-            // printf("ObjectType %s\n", sceneObject.objectType.c_str());
+            // printf("UseTexture %s\n", sceneObject.textureName.c_str());
         }
         else if (tokens.size() >= 2 && tokens[0] == "MeshType") {
             sceneObject->meshType = std::stoi(tokens[1]);
@@ -728,25 +728,25 @@ void SceneEditor::LoadScene()
         }
         else if (tokens.size() >= 2 && tokens[0] == "ModelType") {
             sceneObject->modelType = std::stoi(tokens[1]);
-            // printf("ModelType %s\n", sceneObject.modelType.c_str());
+            // printf("UseTexture %s\n", sceneObject.textureName.c_str());
         }
         else if (tokens.size() >= 2 && tokens[0] == "MaterialName") {
             sceneObject->materialName = tokens[1];
-            // printf("MaterialName %s\n", sceneObject.materialName.c_str());
+            // printf("UseTexture %s\n", sceneObject.textureName.c_str());
         }
         else if (tokens.size() >= 2 && tokens[0] == "TilingFactorMaterial") {
             sceneObject->tilingFMaterial = std::stof(tokens[1]);
-            // printf("TilingFactorMaterial %s\n", sceneObject.tilingFactorMaterial.c_str());
+            // printf("UseTexture %s\n", sceneObject.textureName.c_str());
         }
         else if (tokens.size() >= 1 && tokens[0] == "EndObject") {
             sceneObject->id = (int)m_SceneObjects.size();
             sceneObject->transform = Math::CreateTransform(sceneObject->position, sceneObject->rotation, sceneObject->scale);
-            sceneObject->AABB  = new AABB(sceneObject->positionAABB, sceneObject->rotation, sceneObject->scaleAABB);
+            sceneObject->AABB = new AABB(sceneObject->positionAABB, sceneObject->rotation, sceneObject->scaleAABB);
             sceneObject->pivot = new Pivot(sceneObject->position, sceneObject->scale);
             Mesh* mesh = nullptr;
             Model* model = nullptr;
             if (sceneObject->objectType == "mesh") {
-                sceneObject->mesh  = CreateNewPrimitive(sceneObject->meshType, sceneObject->scale);
+                sceneObject->mesh = CreateNewPrimitive(sceneObject->meshType, sceneObject->scale);
             }
             else if (sceneObject->objectType == "model")
                 sceneObject->model = AddNewModel(sceneObject->modelType, sceneObject->scale);
@@ -830,9 +830,8 @@ void SceneEditor::UpdateImGui(float timestep, Window& mainWindow, std::map<const
 
     if (m_SceneObjects.size() > 0 && m_SelectedIndex < m_SceneObjects.size())
     {
-        glm::vec3 quatToVec3 = glm::eulerAngles(m_SceneObjects[m_SelectedIndex]->rotation) / toRadians;
         m_PositionEdit = &m_SceneObjects[m_SelectedIndex]->position;
-        m_RotationEdit = &quatToVec3;
+        m_RotationEdit = &(glm::eulerAngles(m_SceneObjects[m_SelectedIndex]->rotation) / toRadians);
         m_ScaleEdit = &m_SceneObjects[m_SelectedIndex]->scale;
         m_ColorEdit = &m_SceneObjects[m_SelectedIndex]->color;
         m_TextureNameEdit = &m_SceneObjects[m_SelectedIndex]->textureName;
@@ -912,10 +911,10 @@ void SceneEditor::UpdateImGui(float timestep, Window& mainWindow, std::map<const
 
     ImGui::Separator();
     ImGui::Text("Select HDRI");
-    ImGui::RadioButton("Greenwich Park",      &m_HDRI_Edit, HDRI_GREENWICH_PARK);
+    ImGui::RadioButton("Greenwich Park", &m_HDRI_Edit, HDRI_GREENWICH_PARK);
     ImGui::RadioButton("San Giuseppe Bridge", &m_HDRI_Edit, HDRI_SAN_GIUSEPPE_BRIDGE);
-    ImGui::RadioButton("Tropical Beach",      &m_HDRI_Edit, HDRI_TROPICAL_BEACH);
-    ImGui::RadioButton("Vignaioli Night",     &m_HDRI_Edit, HDRI_VIGNAIOLI_NIGHT);
+    ImGui::RadioButton("Tropical Beach", &m_HDRI_Edit, HDRI_TROPICAL_BEACH);
+    ImGui::RadioButton("Vignaioli Night", &m_HDRI_Edit, HDRI_VIGNAIOLI_NIGHT);
 
     ImGui::Separator();
     ImGui::Text("Cube Maps");
@@ -942,27 +941,25 @@ void SceneEditor::UpdateImGui(float timestep, Window& mainWindow, std::map<const
 
     ImGui::Separator();
     ImGui::Text("Select Add Action Mode");
-    ImGui::RadioButton("Add Mesh",  &m_ActionAddType, ACTION_ADD_MESH);
+    ImGui::RadioButton("Add Mesh Primitive", &m_ActionAddType, ACTION_ADD_MESH);
     ImGui::RadioButton("Add Model", &m_ActionAddType, ACTION_ADD_MODEL);
 
     ImGui::Separator();
-    ImGui::Text("Select Mesh Type");
-    ImGui::RadioButton("Cube",     &m_CurrentMeshTypeID, MESH_TYPE_CUBE);
-    ImGui::RadioButton("Pyramid",  &m_CurrentMeshTypeID, MESH_TYPE_PYRAMID);
-    ImGui::RadioButton("Sphere",   &m_CurrentMeshTypeID, MESH_TYPE_SPHERE);
+    ImGui::Text("Select Object Type");
+    ImGui::RadioButton("Cube", &m_CurrentMeshTypeID, MESH_TYPE_CUBE);
+    ImGui::RadioButton("Pyramid", &m_CurrentMeshTypeID, MESH_TYPE_PYRAMID);
+    ImGui::RadioButton("Sphere", &m_CurrentMeshTypeID, MESH_TYPE_SPHERE);
     ImGui::RadioButton("Cylinder", &m_CurrentMeshTypeID, MESH_TYPE_CYLINDER);
-    ImGui::RadioButton("Cone",     &m_CurrentMeshTypeID, MESH_TYPE_CONE);
-    ImGui::RadioButton("Ring",     &m_CurrentMeshTypeID, MESH_TYPE_RING);
-    ImGui::RadioButton("Bob Lamp", &m_CurrentMeshTypeID, MESH_TYPE_BOB_LAMP);
-    ImGui::RadioButton("Anim Boy", &m_CurrentMeshTypeID, MESH_TYPE_ANIM_BOY);
+    ImGui::RadioButton("Cone", &m_CurrentMeshTypeID, MESH_TYPE_CONE);
+    ImGui::RadioButton("Ring", &m_CurrentMeshTypeID, MESH_TYPE_RING);
 
     ImGui::Separator();
     ImGui::Text("Select Model");
     ImGui::RadioButton("Stone Carved", &m_CurrentModelID, MODEL_STONE_CARVED);
-    ImGui::RadioButton("Old Stove",    &m_CurrentModelID, MODEL_OLD_STOVE);
-    ImGui::RadioButton("Buddha",       &m_CurrentModelID, MODEL_BUDDHA);
-    ImGui::RadioButton("HHeli",        &m_CurrentModelID, MODEL_HHELI);
-    ImGui::RadioButton("Jeep",         &m_CurrentModelID, MODEL_JEEP);
+    ImGui::RadioButton("Old Stove", &m_CurrentModelID, MODEL_OLD_STOVE);
+    ImGui::RadioButton("Buddha", &m_CurrentModelID, MODEL_BUDDHA);
+    ImGui::RadioButton("HHeli", &m_CurrentModelID, MODEL_HHELI);
+    ImGui::RadioButton("Jeep", &m_CurrentModelID, MODEL_JEEP);
 
     ImGui::Separator();
     float FOV = GetFOV();
@@ -1132,26 +1129,26 @@ SceneObject* SceneEditor::CreateNewSceneObject()
     // Add Scene Object here
     SceneObject* sceneObject = new SceneObject();
 
-    sceneObject->id              = (int)m_SceneObjects.size();
-    sceneObject->name            = "";
-    sceneObject->transform       = glm::mat4(1.0f);
-    sceneObject->position        = defaultSpawnPosition;
-    sceneObject->rotation        = glm::quat(glm::vec3(0.0f));
-    sceneObject->scale           = glm::vec3(1.0f);
-    sceneObject->positionAABB    = defaultSpawnPosition;
-    sceneObject->scaleAABB       = glm::vec3(1.0f);
-    sceneObject->color           = glm::vec4(1.0f);
-    sceneObject->textureName     = "none";
-    sceneObject->tilingFactor    = 1.0f;
-    sceneObject->isSelected      = true;
-    sceneObject->AABB            = new AABB(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f));
-    sceneObject->pivot           = new Pivot(glm::vec3(0.0f), glm::vec3(1.0f));
-    sceneObject->objectType      = "";
-    sceneObject->mesh            = nullptr;
-    sceneObject->meshType        = -1;
-    sceneObject->model           = nullptr;
-    sceneObject->modelType       = -1;
-    sceneObject->materialName    = "";
+    sceneObject->id = (int)m_SceneObjects.size();
+    sceneObject->name = "";
+    sceneObject->transform = glm::mat4(1.0f);
+    sceneObject->position = defaultSpawnPosition;
+    sceneObject->rotation = glm::quat(glm::vec3(0.0f));
+    sceneObject->scale = glm::vec3(1.0f);
+    sceneObject->positionAABB = defaultSpawnPosition;
+    sceneObject->scaleAABB = glm::vec3(1.0f);
+    sceneObject->color = glm::vec4(1.0f);
+    sceneObject->textureName = "none";
+    sceneObject->tilingFactor = 1.0f;
+    sceneObject->isSelected = true;
+    sceneObject->AABB = new AABB(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f));
+    sceneObject->pivot = new Pivot(glm::vec3(0.0f), glm::vec3(1.0f));
+    sceneObject->objectType = "";
+    sceneObject->mesh = nullptr;
+    sceneObject->meshType = -1;
+    sceneObject->model = nullptr;
+    sceneObject->modelType = -1;
+    sceneObject->materialName = "";
     sceneObject->tilingFMaterial = 1.0f;
 
     return sceneObject;
@@ -1196,6 +1193,14 @@ void SceneEditor::AddSceneObject()
             positionAABB = glm::vec3(0.0f, 42.0f, 0.0f);
             scaleAABB = glm::vec3(30.0f, 84.0f, 30.0f);
         }
+        else if (m_CurrentModelID == false) {
+            modelName = "animated_character";
+            materialName = "animated_character";
+            rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
+            scale = glm::vec3(0.8f);
+            positionAABB = glm::vec3(0.0f, 0.0f, 5.0f);
+            scaleAABB = glm::vec3(2.0f, 2.0f, 10.0f);
+        }
         else if (m_CurrentModelID == MODEL_BUDDHA) {
             modelName = "buddha";
             materialName = "none";
@@ -1208,8 +1213,8 @@ void SceneEditor::AddSceneObject()
             materialName = "none";
             rotation = glm::vec3(0.0f, 90.0f, 0.0f);
             scale = glm::vec3(0.05f);
-            positionAABB = glm::vec3(20.0f, 40.0f, 0.0f);
-            scaleAABB = glm::vec3(260.0f, 80.0f, 100.0f);
+            positionAABB = glm::vec3(0.0f, 30.0f, -40.0f);
+            scaleAABB = glm::vec3(260.0f, 60.0f, 100.0f);
         }
         else if (m_CurrentModelID == MODEL_JEEP) {
             modelName = "jeep";
@@ -1218,6 +1223,14 @@ void SceneEditor::AddSceneObject()
             scale = glm::vec3(0.01f);
             positionAABB = glm::vec3(0.0f, 130.0f, -10.0f);
             scaleAABB = glm::vec3(780.0f, 260.0f, 400.0f);
+        }
+        else if (m_CurrentModelID == false) {
+            modelName = "bob_lamp";
+            materialName = "none";
+            rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
+            scale = glm::vec3(0.15f);
+            positionAABB = glm::vec3(0.0f, 0.0f, 30.0f);
+            scaleAABB = glm::vec3(20.0f, 20.0f, 60.0f);
         }
     }
 
@@ -1263,7 +1276,7 @@ void SceneEditor::CopySceneObject(Window& mainWindow, std::vector<SceneObject*>*
         mesh = CreateNewPrimitive(oldSceneObject->meshType, oldSceneObject->mesh->GetScale());
     }
     else if (oldSceneObject->objectType == "model" && oldSceneObject->model != nullptr) {
-        model = AddNewModel(m_CurrentModelID, oldSceneObject->mesh->GetScale()); // TODO: m_CurrentModelID hard-coded, must be in SceneObject
+        model = AddNewModel(m_CurrentModelID, oldSceneObject->mesh->GetScale()); // TODO: m_CurrentModelID hard-coded, most be in SceneObject
     }
 
     SceneObject* newSceneObject = new SceneObject();
@@ -1366,6 +1379,9 @@ Model* SceneEditor::AddNewModel(int modelID, glm::vec3 scale)
     case MODEL_OLD_STOVE:
         model = new Model("Models/Old_Stove/udmheheqx_LOD0.fbx");
         break;
+    case 10:
+        model = new Model("Models/AnimatedCharacter.dae");
+        break;
     case MODEL_BUDDHA:
         model = new Model("Models/OGLdev/buddha/buddha.obj", "Textures/OGLdev/buddha");
         break;
@@ -1374,6 +1390,9 @@ Model* SceneEditor::AddNewModel(int modelID, glm::vec3 scale)
         break;
     case MODEL_JEEP:
         model = new Model("Models/OGLdev/jeep/jeep.obj", "Textures/OGLdev/jeep");
+        break;
+    case 11:
+        model = new Model("Models/OGLdev/BobLamp/boblampclean.md5mesh", "Textures/OGLdev/BobLamp");
         break;
     default:
         model = new Model("Models/Stone_Carved/tf3pfhzda_LOD0.fbx");
@@ -1457,7 +1476,7 @@ void SceneEditor::Render(Window& mainWindow, glm::mat4 projectionMatrix, std::st
                     if (object->textureName != "" && texture != nullptr)
                         texture->Bind(0);
                     else
-                        textures["none"]->Bind(0);
+                        textures["plain"]->Bind(0);
 
                     shaderEditor->setInt("albedoMap", 0);
                     shaderEditor->setFloat("tilingFactor", object->tilingFactor);
@@ -1548,6 +1567,78 @@ void SceneEditor::Render(Window& mainWindow, glm::mat4 projectionMatrix, std::st
         object->AABB->Update(object->position, object->rotation, object->scale);
         object->pivot->Update(object->position, object->scale + 1.0f);
     }
+
+    /**** Begin Skinning ****/
+    float RunningTime = ((float)glfwGetTime() * 1000.0f - m_StartTimestamp) / 1000.0f;
+    // m_SkinnedMeshBobLamp.BoneTransform(RunningTime, m_SkinningTransformsBobLamp);
+    // m_SkinnedMeshAnimChar.BoneTransform(RunningTime, m_SkinningTransformsAnimChar);
+
+    shaderSkinning->Bind();
+    shaderSkinning->setInt("gColorMap", 1);
+    shaderSkinning->setFloat("gMatSpecularIntensity", m_MaterialSpecular);
+    shaderSkinning->setFloat("gSpecularPower", m_MaterialShininess);
+
+    {
+        // Bob Lamp
+        char locBuff[100] = { '\0' };
+        for (unsigned int i = 0; i < 1; i++)
+        {
+            snprintf(locBuff, sizeof(locBuff), "gBones[%d]", i);
+            // shaderSkinning->setMat4(locBuff, m_SkinningTransformsBobLamp[i]); // glm::mat4(1.0f)
+        }
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-2.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        model = glm::scale(model, glm::vec3(0.1f));
+        shaderSkinning->setMat4("model", model);
+        // m_SkinnedMeshBobLamp.Render();
+    }
+
+    {
+        // Animated Character (ThinMatrix)
+        char locBuff[100] = { '\0' };
+        for (unsigned int i = 0; i < 1; i++)
+        {
+            snprintf(locBuff, sizeof(locBuff), "gBones[%d]", i);
+            // shaderSkinning->setMat4(locBuff, m_SkinningTransformsAnimChar[i]); // glm::mat4(1.0f)
+        }
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        model = glm::scale(model, glm::vec3(0.5f));
+        shaderSkinning->setMat4("model", model);
+        // m_SkinnedMeshAnimChar.Render();
+    }
+    /**** End Skinning ****/
+
+    /**** Begin Glass (Reflection/Refraction/Fresnel) ****/
+    {
+        shaderGlass->Bind();
+
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, -10.0f));
+        model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        model = glm::scale(model, glm::vec3(0.05f));
+        shaderGlass->setMat4("model", model);
+
+        if (m_PBR_Map_Edit == PBR_MAP_ENVIRONMENT)
+            m_MaterialWorkflowPBR->BindEnvironmentCubemap(1);
+        else if (m_PBR_Map_Edit == PBR_MAP_IRRADIANCE)
+            m_MaterialWorkflowPBR->BindIrradianceMap(1);
+        else if (m_PBR_Map_Edit == PBR_MAP_PREFILTER)
+            m_MaterialWorkflowPBR->BindPrefilterMap(1);
+
+        shaderGlass->setInt("uCubemap", 1);
+
+        m_GlassShaderModel->RenderPBR();
+    }
+    /**** End Glass (Reflection/Refraction/Fresnel) ****/
 
     if (passType == "main")
     {
